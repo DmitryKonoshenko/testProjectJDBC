@@ -1,84 +1,78 @@
 package test.project;
-import java.sql.*;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import test.project.dao.DaoLocatorFactory;
+import test.project.dao.daoint.PersonDao;
+import test.project.dao.implimintation.PersonDaoImpl;
+import test.project.entity.Person;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class App {
-	public static void init() throws ClassNotFoundException {
-		Class.forName("org.h2.Driver");
-	}
+	private static Connection connection;
+	private static final Log LOG = LogFactory.getLog(App.class);
+	private static final String DB_DRIVER = "org.h2.Driver";
+	private static final String DB_URL = "jdbc:h2:tcp://localhost/~/test";
+	private static final String DB_USERNAME = "sa";
+	private static final String DB_PASSWORD = "";
 
 	public static Connection getConnection() throws SQLException {
-		String URL = "jdbc:h2:tcp://localhost/~/test";
-		String USER = "sa";
-		String PASS = "";
-		return DriverManager.getConnection(URL, USER, PASS);
-	}
-
-	public static void statements(Connection connection) throws SQLException {
-		try (Statement statement = connection.createStatement()) {
-			statement.execute("create table user(" +
-					"id integer primary key auto_increment, " +
-					"name varchar(100));");
-
-			statement.execute("insert into user(name) values('borya'),('petya')");
-		}
-	}
-
-	public static void resultSet(Connection connection) throws SQLException {
-		try (Statement statement = connection.createStatement()) {
-			ResultSet rs = statement.executeQuery("select * from user");
-			while (rs.next()) {
-				System.out.println(rs.getInt("id") + " : " + rs.getString("name"));
-			}
-			System.out.println("----------------");
-		}
-	}
-
-	public static void prepare(Connection connection) throws SQLException {
-		try (PreparedStatement statement = connection
-				.prepareStatement("insert into user(id,name) values(?,?)")) {
-
-			statement.setInt(1, 3);
-			statement.setString(2, "fedya");
-			statement.executeUpdate();
-
-			statement.setInt(1, 4);
-			statement.setString(2, "misha");
-			statement.addBatch();
-			statement.setInt(1, 5);
-			statement.setString(2, "grisha");
-			statement.addBatch();
-			statement.executeBatch();
-		}
-	}
-
-	public static void transactions(Connection connection) throws SQLException {
-		try (Statement statement = connection.createStatement()) {
-
-			connection.setAutoCommit(false);
-
+		if (connection == null || connection.isClosed()) {
 			try {
-				statement.execute("insert into user(name) values('kesha')");
-				connection.commit();
-			} catch (SQLException e)  {
-				connection.rollback();
+				Class.forName(DB_DRIVER);
+				connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
+				LOG.debug("Connection OK");
+			} catch (ClassNotFoundException | SQLException e) {
+				LOG.warn("Connection ERROR: " + e);
 			}
-
-			connection.setAutoCommit(true);
 		}
+		return connection;
 	}
 
-	public static void main(String[] args) throws Exception {
-		init();
+	public static void main(String[] args) {
+		PersonDao personDao = new PersonDaoImpl();
+//		Address address = new Address();
+//		address.setCity("Voronej");
+//		address.setCountry("RUS");
+//		address.setPostCode("123123");
+//		address.setStreet("Milk");
+//
+//		Person person = new Person();
+//		person.setFirstName("Denchik");
+//		person.setLastName("Por");
+//		person.setBirthday(LocalDate.of(1995,3,9));
+//		person.setAddress(address);
 
-		try (Connection connection = getConnection()) {
-			statements(connection);
-			resultSet(connection);
+//		Person person2 = new Person();
+//		person2.setFirstName("Denchik");
+//		person2.setLastName("Por2");
+//		person2.setBirthday(LocalDate.of(1995,3,9));
+//		person2.setAddress(address);
+//
+//		personDao.add(person);
+//		personDao.add(person2);
+//		List<Person> p = DaoLocatorFactory.getDaoLocator().getPersonDao().getAll();
+//		p.forEach(System.out::println);
+//		System.out.println(personDao.getByName("Denchik"));
 
-			prepare(connection);
-			resultSet(connection);
-
-			transactions(connection);
-			resultSet(connection);
-		}
+//		Address address = new Address();
+//		address.setId(1L);
+//		address.setCity("Piter");
+//		address.setCountry("Her");
+//		address.setPostCode("123123");
+//		address.setStreet("Milk");
+//
+//		Person person = new Person();
+//		person.setId(1L);
+//		person.setFirstName("Mark");
+//		person.setLastName("Cot");
+//		person.setBirthday(LocalDate.of(1996, 3, 9));
+//		person.setAddress(address);
+//		personDao.update(person);
+		Person person = DaoLocatorFactory.getDaoLocator().getPersonDao().getByName("Denchik");
+		personDao.remove(person);
 	}
 }
