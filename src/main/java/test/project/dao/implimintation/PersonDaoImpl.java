@@ -26,13 +26,20 @@ public class PersonDaoImpl implements PersonDao {
 	}
 
 	@Override
-	public void add(Person person) {
+	public void add(Person person) throws SQLException {
 		LOG.debug("Adding person into DB");
 		String personSql = "INSERT INTO PERSON (FIRST_NAME, LAST_NAME, BIRTHDAY, ADDRESS_ID) " +
 				"VALUES(?, ?, ?, ?)";
 		String addressSql = "INSERT INTO ADDRESS (COUNTRY, CITY, STREET, POST_CODE) VALUES(?, ?, ?, ?)";
+		String sql = "SELECT ID, FIRST_NAME, LAST_NAME, BIRTHDAY, ADDRESS_ID FROM PERSON WHERE FIRST_NAME=?";
 		try (PreparedStatement preparedStatementPerson = getConnection().prepareStatement(personSql, Statement.RETURN_GENERATED_KEYS);
-		     PreparedStatement preparedStatementAddress = getConnection().prepareStatement(addressSql, Statement.RETURN_GENERATED_KEYS)) {
+		     PreparedStatement preparedStatementAddress = getConnection().prepareStatement(addressSql, Statement.RETURN_GENERATED_KEYS);
+		     PreparedStatement preparedStatement = getConnection().prepareStatement(sql)){
+
+			preparedStatement.setString(1,person.getFirstName());
+			ResultSet resultSet = preparedStatement.executeQuery();
+			if (resultSet.next()) throw new SQLException();
+
 			getConnection().setAutoCommit(false);
 
 			preparedStatementAddress.setString(1, person.getAddress().getCountry());
@@ -63,14 +70,15 @@ public class PersonDaoImpl implements PersonDao {
 				s.printStackTrace();
 			}
 			getConnection().commit();
-			getConnection().close();
-		} catch (SQLException e) {
+		} catch(SQLException e){
 			LOG.warn("Adding person into DB failed: " + e);
+		}finally{
+			getConnection().close();
 		}
 	}
 
 	@Override
-	public List<Person> getAll() {
+	public List<Person> getAll() throws SQLException {
 		LOG.debug("Getting all person from DB");
 		List<Person> employeeList = new ArrayList<>();
 
@@ -87,9 +95,10 @@ public class PersonDaoImpl implements PersonDao {
 				person.setAddress(address);
 				employeeList.add(person);
 			}
-			getConnection().close();
 		} catch (SQLException e) {
-			LOG.debug("Getting all person from DB failed: " + e);
+			LOG.warn("Getting all person from DB failed: " + e);
+		} finally {
+			getConnection().close();
 		}
 		return employeeList;
 	}
@@ -102,7 +111,7 @@ public class PersonDaoImpl implements PersonDao {
 	}
 
 	@Override
-	public Person getByName(String name) {
+	public Person getByName(String name) throws SQLException {
 		LOG.debug("Getting person from DB by name");
 		String sql = "SELECT ID, FIRST_NAME, LAST_NAME, BIRTHDAY, ADDRESS_ID FROM PERSON WHERE FIRST_NAME=?";
 		Person person = new Person();
@@ -117,15 +126,17 @@ public class PersonDaoImpl implements PersonDao {
 				Address address = DaoLocatorFactory.getDaoLocator().getAddressDao().getById(resultSet.getLong("ADDRESS_ID"));
 				person.setAddress(address);
 			}
-			getConnection().close();
 		} catch (SQLException e) {
-			LOG.debug("Getting person from DB by name failed: " + e);
+			LOG.warn("Getting person from DB by name failed: " + e);
+		} finally {
+			getConnection().close();
 		}
 		return person;
 	}
 
 	@Override
-	public void update(Person person) {
+	public void update(Person person) throws SQLException {
+		LOG.debug("Updating person in DB");
 		String sql = "UPDATE PERSON SET FIRST_NAME=?, LAST_NAME=?, BIRTHDAY=?, ADDRESS_ID=? WHERE id=?";
 		try (PreparedStatement preparedStatement = getConnection().prepareStatement(sql)) {
 			getConnection().setAutoCommit(false);
@@ -138,17 +149,18 @@ public class PersonDaoImpl implements PersonDao {
 			DaoLocatorFactory.getDaoLocator().getAddressDao().update(person.getAddress());
 			preparedStatement.executeUpdate();
 			getConnection().commit();
-			getConnection().close();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOG.warn("Updating person in DB failed : " + e);
+		} finally {
+			getConnection().close();
 		}
 	}
 
 
 	@Override
-	public void remove(Person person) {
+	public void remove(Person person) throws SQLException {
+		LOG.debug("Removing person from DB");
 		String sql = "DELETE FROM PERSON WHERE ID=?";
-
 		try (PreparedStatement preparedStatement = getConnection().prepareStatement(sql)) {
 			getConnection().setAutoCommit(false);
 			preparedStatement.setLong(1, person.getId());
@@ -157,9 +169,11 @@ public class PersonDaoImpl implements PersonDao {
 			DaoLocatorFactory.getDaoLocator().getAddressDao().remove(person.getAddress());
 
 			getConnection().commit();
-			getConnection().close();
 		} catch (SQLException e) {
+			LOG.warn("Removing person from DB failed");
 			e.printStackTrace();
+		} finally {
+			getConnection().close();
 		}
 	}
 }

@@ -2,6 +2,7 @@ package test.project.dao.daoint;
 
 import test.project.entity.Person;
 
+import java.sql.SQLException;
 import java.util.List;
 
 public interface PersonDao {
@@ -10,14 +11,14 @@ public interface PersonDao {
 	 *
 	 * @param person - person
 	 */
-	void add(Person person);
+	void add(Person person) throws SQLException;
 
 	/**
 	 * Get all person's from DB
 	 *
 	 * @return List<Person>
 	 */
-	List<Person> getAll();
+	List<Person> getAll() throws SQLException;
 
 	/**
 	 * Get person by name
@@ -25,20 +26,20 @@ public interface PersonDao {
 	 * @param name - name of person
 	 * @return Person
 	 */
-	Person getByName(String name);
+	Person getByName(String name) throws SQLException;
 
 	/**
 	 * Update person
 	 *
 	 * @param person - person
 	 */
-	void update(Person person);
+	void update(Person person) throws SQLException;
 
 	/**
 	 * Delete person
 	 *
 	 * @param address - address
 	 */
-	void remove(Person address);
+	void remove(Person address) throws SQLException;
 
 }
