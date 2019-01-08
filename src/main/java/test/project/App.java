@@ -32,7 +32,7 @@ public class App {
 		return connection;
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws SQLException {
 		PersonDao personDao = new PersonDaoImpl();
 //		Address address = new Address();
 //		address.setCity("Voronej");
