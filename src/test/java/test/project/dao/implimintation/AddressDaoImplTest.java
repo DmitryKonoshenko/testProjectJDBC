@@ -39,6 +39,7 @@ public class AddressDaoImplTest {
 		PowerMockito.when(App.getConnection()).thenReturn(connection);
 		PowerMockito.when(connection.prepareStatement(any(String.class))).thenReturn(preparedStatement);
 		PowerMockito.when(preparedStatement.executeQuery()).thenReturn(resultSet);
+		PowerMockito.when(resultSet.next()).thenReturn(true);
 
 		address = new Address();
 		address.setCity("Voronej");
@@ -50,7 +51,6 @@ public class AddressDaoImplTest {
 
 	@Test
 	public void getById() throws SQLException {
-		PowerMockito.when(resultSet.next()).thenReturn(true);
 		PowerMockito.when(resultSet.getLong("ID")).thenReturn(1L);
 		PowerMockito.when(resultSet.getString("COUNTRY")).thenReturn("Bel");
 		PowerMockito.when(resultSet.getString("CITY")).thenReturn("Bobr");
